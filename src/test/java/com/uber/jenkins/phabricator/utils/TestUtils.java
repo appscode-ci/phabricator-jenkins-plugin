@@ -29,9 +29,6 @@ import com.uber.jenkins.phabricator.PhabricatorPlugin;
 import com.uber.jenkins.phabricator.conduit.ConduitAPIClient;
 import com.uber.jenkins.phabricator.conduit.DifferentialClient;
 import com.uber.jenkins.phabricator.coverage.CodeCoverageMetrics;
-import com.uber.jenkins.phabricator.credentials.ConduitCredentials;
-import com.uber.jenkins.phabricator.credentials.ConduitCredentialsImpl;
-import com.uber.jenkins.phabricator.uberalls.UberallsClient;
 import com.uber.jenkins.phabricator.unit.UnitResult;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -85,15 +82,6 @@ public class TestUtils {
 
     public static Logger getDefaultLogger() {
         return new Logger(new PrintStream(new ByteArrayOutputStream()));
-    }
-
-    public static UberallsClient getUberallsClient(String baseURL, Logger logger, String repository,
-                                             String branch) {
-        return spy(new UberallsClient(baseURL, logger, repository, branch));
-    }
-
-    public static UberallsClient getDefaultUberallsClient() {
-        return getUberallsClient(TEST_BASE_URL, getDefaultLogger(), TEST_REPOSITORY, TEST_BRANCH);
     }
 
     public static DifferentialClient getDefaultDifferentialClient() {
@@ -197,27 +185,6 @@ public class TestUtils {
 
     public static void setDefaultBuildEnvironmentForCommits(JenkinsRule j) throws IOException {
         setEnvironmentVariables(j, getValidCommitEnvironment());
-    }
-
-    public static ConduitCredentials getConduitCredentials(String conduitURI) {
-        return new ConduitCredentialsImpl(TEST_CREDENTIALS_ID, conduitURI, "description", TestUtils.TEST_CONDUIT_TOKEN);
-    }
-
-    public static ConduitCredentials getDefaultConduitCredentials() {
-        return getConduitCredentials(TEST_CONDUIT_URL);
-    }
-
-    private static void addCredentials(ConduitCredentials credentials) throws IOException {
-        CredentialsStore store = new SystemCredentialsProvider.UserFacingAction().getStore();
-        store.addCredentials(Domain.global(), credentials);
-    }
-
-    public static void addInvalidCredentials() throws IOException {
-        addCredentials(TestUtils.getDefaultConduitCredentials());
-    }
-
-    public static void addValidCredentials(FakeConduit conduit) throws IOException {
-        addCredentials(TestUtils.getConduitCredentials(conduit.uri()));
     }
 
     public static String getTestServerAddress(LocalTestServer server) {

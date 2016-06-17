@@ -89,8 +89,6 @@ public abstract class BuildIntegrationTest {
         responses.put("differential.getcommitmessage", new JSONObject().element("result", "commit message"));
         conduit = new FakeConduit(responses);
 
-        TestUtils.addValidCredentials(conduit);
-
         addBuildStep();
 
         TestUtils.setDefaultBuildEnvironment(j, harbormaster);
@@ -103,8 +101,6 @@ public abstract class BuildIntegrationTest {
         responses.put("harbormaster.sendmessage", sendMessageResponse);
         responses.put("harbormaster.createartifact", new JSONObject());
         conduit = new FakeConduit(responses);
-
-        TestUtils.addValidCredentials(conduit);
 
         addBuildStep();
 

@@ -42,7 +42,6 @@ public class PhabricatorNotifierTest extends BuildIntegrationTest {
         notifier = new PhabricatorNotifier(
                 false,
                 true,
-                true,
                 ".phabricator-comment",
                 "1001",
                 false,
@@ -53,7 +52,6 @@ public class PhabricatorNotifierTest extends BuildIntegrationTest {
     @Test
     public void testGetters() {
         assertFalse(notifier.isCommentOnSuccess());
-        assertTrue(notifier.isUberallsEnabled());
         assertTrue(notifier.isPreserveFormatting());
         assertEquals(".phabricator-comment", notifier.getCommentFile());
         assertEquals("1001", notifier.getCommentSize());
@@ -142,7 +140,6 @@ public class PhabricatorNotifierTest extends BuildIntegrationTest {
     public void testPostCoverageUberallsDisabled() throws Exception {
         notifier = new PhabricatorNotifier(
                 false,
-                false,
                 true,
                 ".phabricator-comment",
                 "1000",
@@ -164,15 +161,11 @@ public class PhabricatorNotifierTest extends BuildIntegrationTest {
     public void testDescriptor() {
         PhabricatorNotifierDescriptor descriptor = notifier.getDescriptor();
 
-        assertNull(descriptor.getCredentialsID());
-        assertNull(descriptor.getUberallsURL());
         assertNull(descriptor.getCommentSize());
         assertNull(descriptor.getCommentFile());
 
         descriptor.setCommentFile("hello.world");
         descriptor.setCommentSize("1000");
-        descriptor.setCredentialsID("not-a-real-uuid");
-        descriptor.setUberallsURL("http://uber.alls");
     }
 
     @Override

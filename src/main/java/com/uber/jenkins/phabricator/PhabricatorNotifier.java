@@ -26,15 +26,13 @@ import com.uber.jenkins.phabricator.conduit.Differential;
 import com.uber.jenkins.phabricator.conduit.DifferentialClient;
 import com.uber.jenkins.phabricator.coverage.CodeCoverageMetrics;
 import com.uber.jenkins.phabricator.coverage.CoverageProvider;
-import com.uber.jenkins.phabricator.credentials.ConduitCredentials;
 import com.uber.jenkins.phabricator.provider.InstanceProvider;
-import com.uber.jenkins.phabricator.tasks.NonDifferentialBuildTask;
 import com.uber.jenkins.phabricator.tasks.NonDifferentialHarbormasterTask;
 import com.uber.jenkins.phabricator.tasks.Task;
-import com.uber.jenkins.phabricator.uberalls.UberallsClient;
 import com.uber.jenkins.phabricator.unit.UnitTestProvider;
 import com.uber.jenkins.phabricator.utils.CommonUtils;
 import com.uber.jenkins.phabricator.utils.Logger;
+import com.uber.jenkins.phabricator.utils.PhUtil;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -58,7 +56,6 @@ public class PhabricatorNotifier extends Notifier {
     private static final String CONDUIT_TAG = "conduit";
     // Post a comment on success. Useful for lengthy builds.
     private final boolean commentOnSuccess;
-    private final boolean uberallsEnabled;
     private final boolean commentWithConsoleLinkOnFailure;
     private final boolean preserveFormatting;
     private final String commentFile;
@@ -67,10 +64,9 @@ public class PhabricatorNotifier extends Notifier {
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public PhabricatorNotifier(boolean commentOnSuccess, boolean uberallsEnabled, boolean preserveFormatting,
+    public PhabricatorNotifier(boolean commentOnSuccess, boolean preserveFormatting,
                                String commentFile, String commentSize, boolean commentWithConsoleLinkOnFailure, boolean customComment) {
         this.commentOnSuccess = commentOnSuccess;
-        this.uberallsEnabled = uberallsEnabled;
         this.commentFile = commentFile;
         this.commentSize = commentSize;
         this.preserveFormatting = preserveFormatting;
@@ -95,12 +91,6 @@ public class PhabricatorNotifier extends Notifier {
         }
 
         final String branch = environment.get("GIT_BRANCH");
-        final UberallsClient uberallsClient = new UberallsClient(
-                getDescriptor().getUberallsURL(),
-                logger,
-                environment.get("GIT_URL"),
-                branch
-        );
         final boolean needsDecoration = build.getActions(PhabricatorPostbuildAction.class).size() == 0;
 
         final String diffID = environment.get(PhabricatorPlugin.DIFFERENTIAL_ID_FIELD);
@@ -115,23 +105,12 @@ public class PhabricatorNotifier extends Notifier {
             if (needsDecoration) {
                 build.addAction(PhabricatorPostbuildAction.createShortText(branch, null));
             }
-
-            NonDifferentialBuildTask nonDifferentialBuildTask = new NonDifferentialBuildTask(
-                    logger,
-                    uberallsClient,
-                    coverageResult,
-                    uberallsEnabled,
-                    environment.get("GIT_COMMIT")
-            );
-
-            // Ignore the result.
-            nonDifferentialBuildTask.run();
             return true;
         }
 
         ConduitAPIClient conduitClient;
         try {
-            conduitClient = getConduitClient(build.getParent());
+            conduitClient = PhUtil.getConduitClient(build.getParent(), logger);
         } catch (ConduitAPIException e) {
             e.printStackTrace(logger.getStream());
             logger.warn(CONDUIT_TAG, e.getMessage());
@@ -164,7 +143,7 @@ public class PhabricatorNotifier extends Notifier {
         }
 
         if (needsDecoration) {
-            diff.decorate(build, this.getPhabricatorURL(build.getParent()));
+            diff.decorate(build, PhUtil.getPhabricatorURL(build.getParent()));
         }
 
         BuildResultProcessor resultProcessor = new BuildResultProcessor(
@@ -177,10 +156,6 @@ public class PhabricatorNotifier extends Notifier {
                 buildUrl,
                 preserveFormatting
         );
-
-        if (uberallsEnabled) {
-            resultProcessor.processParentCoverage(uberallsClient);
-        }
 
         // Add in comments about the build result
         resultProcessor.processBuildResult(commentOnSuccess, commentWithConsoleLinkOnFailure);
@@ -201,14 +176,6 @@ public class PhabricatorNotifier extends Notifier {
         resultProcessor.sendComment(commentWithConsoleLinkOnFailure);
 
         return true;
-    }
-
-    private ConduitAPIClient getConduitClient(Job owner) throws ConduitAPIException {
-        ConduitCredentials credentials = getConduitCredentials(owner);
-        if (credentials == null) {
-            throw new ConduitAPIException("No credentials configured for conduit");
-        }
-        return new ConduitAPIClient(credentials.getUrl(), credentials.getToken().getPlainText());
     }
 
     /**
@@ -273,11 +240,6 @@ public class PhabricatorNotifier extends Notifier {
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public boolean isUberallsEnabled() {
-        return uberallsEnabled;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
     public boolean isCommentWithConsoleLinkOnFailure() {
         return commentWithConsoleLinkOnFailure;
     }
@@ -295,18 +257,6 @@ public class PhabricatorNotifier extends Notifier {
     @SuppressWarnings("UnusedDeclaration")
     public boolean isPreserveFormatting() {
         return preserveFormatting;
-    }
-
-    private ConduitCredentials getConduitCredentials(Job owner) {
-        return getDescriptor().getCredentials(owner);
-    }
-
-    private String getPhabricatorURL(Job owner) {
-        ConduitCredentials credentials = getDescriptor().getCredentials(owner);
-        if (credentials != null) {
-            return credentials.getUrl();
-        }
-        return null;
     }
 
     // Overridden for better type safety.

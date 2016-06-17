@@ -17,11 +17,6 @@
   -->
   <f:section title="Phabricator" name="phabricator">
     <f:optionalBlock>
-      <f:entry title="Default Phabricator Credentials" field="credentialsID"
-               description="Conduit URI and Token">
-        <c:select />
-      </f:entry>
-
       <f:entry title="Location of arcanist" field="arcPath"
                description="location of `arc` binary, if not in path">
         <f:textbox default="arc" />

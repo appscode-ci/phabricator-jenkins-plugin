@@ -20,7 +20,6 @@
 
 package com.uber.jenkins.phabricator;
 
-import com.uber.jenkins.phabricator.credentials.ConduitCredentials;
 import com.uber.jenkins.phabricator.utils.CommonUtils;
 import hudson.Extension;
 import hudson.model.AbstractProject;
@@ -45,8 +44,6 @@ import org.kohsuke.stapler.StaplerRequest;
 @SuppressWarnings("UnusedDeclaration")
 @Extension
 public final class PhabricatorNotifierDescriptor extends BuildStepDescriptor<Publisher> {
-    private String credentialsID;
-    private String uberallsURL;
     private String commentFile;
     private String commentSize;
 
@@ -75,43 +72,12 @@ public final class PhabricatorNotifierDescriptor extends BuildStepDescriptor<Pub
         return "Post to Phabricator";
     }
 
-    @SuppressWarnings("unused")
-    public ListBoxModel doFillCredentialsIDItems(@AncestorInPath Jenkins context,
-                                                 @QueryParameter String remoteBase) {
-        return ConduitCredentialsDescriptor.doFillCredentialsIDItems(
-                context);
-    }
-
-    public ConduitCredentials getCredentials(Job owner) {
-        return ConduitCredentialsDescriptor.getCredentials(owner, credentialsID);
-    }
-
     @Override
     public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
         // To persist global configuration information,
         // set that to properties and call save().
-        req.bindJSON(this, formData.getJSONObject("uberalls"));
         save();
         return super.configure(req, formData);
-    }
-
-    public String getCredentialsID() {
-        return credentialsID;
-    }
-
-    public void setCredentialsID(String credentialsID) {
-        this.credentialsID = credentialsID;
-    }
-
-    public String getUberallsURL() {
-        if (!CommonUtils.isBlank(uberallsURL)) {
-            return uberallsURL;
-        }
-        return null;
-    }
-
-    public void setUberallsURL(String value) {
-        uberallsURL = value;
     }
 
     public void setCommentFile(String commentFile) {

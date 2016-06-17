@@ -83,7 +83,6 @@ public class PhabricatorBuildWrapperTest extends BuildIntegrationTest {
 
     @Test
     public void testBuildInvalidConduit() throws Exception {
-        TestUtils.addInvalidCredentials();
         addBuildStep();
         TestUtils.setDefaultBuildEnvironment(j);
 

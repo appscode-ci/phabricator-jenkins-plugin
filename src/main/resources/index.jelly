@@ -3,5 +3,5 @@
 -->
 <?jelly escape-by-default='true'?>
 <div>
-  This plugin integrates Phabricator and Harbormaster with Jenkins and Uberalls.
+  This plugin integrates Phabricator and Harbormaster with Jenkins.
 </div>

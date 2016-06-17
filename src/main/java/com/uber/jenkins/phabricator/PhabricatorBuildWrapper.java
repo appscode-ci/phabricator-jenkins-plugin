@@ -24,18 +24,17 @@ import com.uber.jenkins.phabricator.conduit.ConduitAPIClient;
 import com.uber.jenkins.phabricator.conduit.ConduitAPIException;
 import com.uber.jenkins.phabricator.conduit.Differential;
 import com.uber.jenkins.phabricator.conduit.DifferentialClient;
-import com.uber.jenkins.phabricator.credentials.ConduitCredentials;
 import com.uber.jenkins.phabricator.tasks.ApplyPatchTask;
 import com.uber.jenkins.phabricator.tasks.SendHarbormasterResultTask;
 import com.uber.jenkins.phabricator.tasks.SendHarbormasterUriTask;
 import com.uber.jenkins.phabricator.tasks.Task;
 import com.uber.jenkins.phabricator.utils.CommonUtils;
 import com.uber.jenkins.phabricator.utils.Logger;
+import com.uber.jenkins.phabricator.utils.PhUtil;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.model.Job;
 import hudson.tasks.BuildWrapper;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -93,7 +92,7 @@ public class PhabricatorBuildWrapper extends BuildWrapper {
 
         ConduitAPIClient conduitClient;
         try {
-            conduitClient = getConduitClient(build.getParent(), logger);
+            conduitClient = PhUtil.getConduitClient(build.getParent(), logger);
         } catch (ConduitAPIException e) {
             e.printStackTrace(logger.getStream());
             logger.warn(CONDUIT_TAG, e.getMessage());
@@ -116,7 +115,7 @@ public class PhabricatorBuildWrapper extends BuildWrapper {
         try {
             diff = new Differential(diffClient.fetchDiff());
             diff.setCommitMessage(diffClient.getCommitMessage(diff.getRevisionID(false)));
-            diff.decorate(build, this.getPhabricatorURL(build.getParent()));
+            diff.decorate(build, PhUtil.getPhabricatorURL(build.getParent()));
 
             logger.info(CONDUIT_TAG, "Fetching differential from Conduit API");
 
@@ -136,7 +135,12 @@ public class PhabricatorBuildWrapper extends BuildWrapper {
             baseCommit = diff.getBaseCommit();
         }
 
-        final String conduitToken = this.getConduitToken(build.getParent(), logger);
+        final String conduitToken;
+        try {
+            conduitToken = PhUtil.getConduitToken(build.getParent(), logger);
+        } catch (Exception e) {
+            throw new InterruptedException(e.getMessage());
+        }
         Task.Result result = new ApplyPatchTask(
                 logger, starter, baseCommit, diffID, conduitToken, getArcPath(),
                 DEFAULT_GIT_PATH, createCommit, skipForcedClean, createBranch,
@@ -173,18 +177,6 @@ public class PhabricatorBuildWrapper extends BuildWrapper {
         return new Environment(){};
     }
 
-    private ConduitAPIClient getConduitClient(Job owner, Logger logger) throws ConduitAPIException {
-        ConduitCredentials credentials = getConduitCredentials(owner);
-        if (credentials == null) {
-            throw new ConduitAPIException("No credentials configured for conduit");
-        }
-        return new ConduitAPIClient(credentials.getUrl(), getConduitToken(owner, logger));
-    }
-
-    private ConduitCredentials getConduitCredentials(Job owner) {
-        return getDescriptor().getCredentials(owner);
-    }
-
     @SuppressWarnings("UnusedDeclaration")
     public boolean isCreateCommit() {
         return createCommit;
@@ -203,23 +195,6 @@ public class PhabricatorBuildWrapper extends BuildWrapper {
     @SuppressWarnings("unused")
     public boolean isPatchWithForceFlag() {
         return patchWithForceFlag;
-    }
-
-    private String getPhabricatorURL(Job owner) {
-        ConduitCredentials credentials = getConduitCredentials(owner);
-        if (credentials != null) {
-            return credentials.getUrl();
-        }
-        return null;
-    }
-
-    private String getConduitToken(Job owner, Logger logger) {
-        ConduitCredentials credentials = getConduitCredentials(owner);
-        if (credentials != null) {
-            return credentials.getToken().getPlainText();
-        }
-        logger.warn("credentials", "No credentials configured.");
-        return null;
     }
 
     /**

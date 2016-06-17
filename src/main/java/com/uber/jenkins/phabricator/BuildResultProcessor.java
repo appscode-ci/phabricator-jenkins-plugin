@@ -29,7 +29,6 @@ import com.uber.jenkins.phabricator.tasks.PostCommentTask;
 import com.uber.jenkins.phabricator.tasks.SendHarbormasterResultTask;
 import com.uber.jenkins.phabricator.tasks.SendHarbormasterUriTask;
 import com.uber.jenkins.phabricator.tasks.Task;
-import com.uber.jenkins.phabricator.uberalls.UberallsClient;
 import com.uber.jenkins.phabricator.unit.UnitResults;
 import com.uber.jenkins.phabricator.unit.UnitTestProvider;
 import com.uber.jenkins.phabricator.utils.CommonUtils;
@@ -79,26 +78,6 @@ public class BuildResultProcessor {
         this.commentAction = "none";
         this.commenter = new CommentBuilder(logger, build.getResult(), coverageResult, buildUrl, preserveFormatting);
         this.runHarbormaster = !CommonUtils.isBlank(phid);
-    }
-
-    /**
-     * Fetch parent coverage data from Uberalls, if available
-     *
-     * @param uberalls the client to the Uberalls instance
-     */
-    public void processParentCoverage(UberallsClient uberalls) {
-        // First add in info about the change in coverage, if applicable
-        if (commenter.hasCoverageAvailable()) {
-            if (uberalls.isConfigured()) {
-                commenter.processParentCoverage(uberalls.getParentCoverage(diff.getBaseCommit()), diff.getBaseCommit(),
-                        diff.getBranch());
-            } else {
-                logger.info(LOGGING_TAG, "No Uberalls backend configured, skipping...");
-            }
-        } else {
-            logger.info(LOGGING_TAG, "No line coverage found, skipping...");
-        }
-
     }
 
     /**

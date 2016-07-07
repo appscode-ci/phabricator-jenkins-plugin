@@ -17,9 +17,9 @@
   -->
   <f:section title="Phabricator" name="phabricator">
     <f:optionalBlock>
-      <f:entry title="Location of arcanist" field="arcPath"
-               description="location of `arc` binary, if not in path">
-        <f:textbox default="arc" />
+      <f:entry title="Location of appctl" field="arcPath"
+               description="location of `appctl` binary, if not in path">
+        <f:textbox default="appctl" />
       </f:entry>
     </f:optionalBlock>
   </f:section>

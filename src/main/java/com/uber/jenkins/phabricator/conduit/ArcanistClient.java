@@ -44,9 +44,9 @@ public class ArcanistClient {
         ArgumentListBuilder builder = new ArgumentListBuilder(this.arcPath, this.methodName);
         builder.add(arguments);
 
-        if (!CommonUtils.isBlank(this.conduitToken)) {
-            builder.addMasked("--conduit-token=" + this.conduitToken);
-        }
+        // if (!CommonUtils.isBlank(this.conduitToken)) {
+        //     builder.addMasked("--conduit-token=" + this.conduitToken);
+        // }
         return builder;
     }
 

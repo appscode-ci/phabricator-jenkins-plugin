@@ -26,7 +26,6 @@ import com.uber.jenkins.phabricator.conduit.Differential;
 import com.uber.jenkins.phabricator.conduit.DifferentialClient;
 import com.uber.jenkins.phabricator.coverage.CodeCoverageMetrics;
 import com.uber.jenkins.phabricator.coverage.CoverageProvider;
-import com.uber.jenkins.phabricator.credentials.ConduitCredentials;
 import com.uber.jenkins.phabricator.provider.InstanceProvider;
 import com.uber.jenkins.phabricator.tasks.NonDifferentialBuildTask;
 import com.uber.jenkins.phabricator.tasks.NonDifferentialHarbormasterTask;
@@ -396,18 +395,6 @@ public class PhabricatorNotifier extends Notifier {
     @SuppressWarnings("UnusedDeclaration")
     public String getLintFileSize() {
         return lintFileSize;
-    }
-
-    private ConduitCredentials getConduitCredentials(Job owner) {
-        return getDescriptor().getCredentials(owner);
-    }
-
-    private String getPhabricatorURL(Job owner) {
-        ConduitCredentials credentials = getDescriptor().getCredentials(owner);
-        if (credentials != null) {
-            return credentials.getUrl();
-        }
-        return null;
     }
 
     // Overridden for better type safety.

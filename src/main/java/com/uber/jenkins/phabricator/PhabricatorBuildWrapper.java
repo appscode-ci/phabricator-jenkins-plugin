@@ -251,23 +251,6 @@ public class PhabricatorBuildWrapper extends BuildWrapper {
         return patchWithForceFlag;
     }
 
-    private String getPhabricatorURL(Job owner) {
-        ConduitCredentials credentials = getConduitCredentials(owner);
-        if (credentials != null) {
-            return credentials.getUrl();
-        }
-        return null;
-    }
-
-    private String getConduitToken(Job owner, Logger logger) {
-        ConduitCredentials credentials = getConduitCredentials(owner);
-        if (credentials != null) {
-            return credentials.getToken().getPlainText();
-        }
-        logger.warn("credentials", "No credentials configured.");
-        return null;
-    }
-
     /**
      * Return the path to the arcanist executable
      * @return a string, fully-qualified or not, could just be "arc"

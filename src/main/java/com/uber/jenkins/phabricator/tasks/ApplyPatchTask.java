@@ -107,7 +107,7 @@ public class ApplyPatchTask extends Task {
                     .cmds(Arrays.asList(gitPath, "submodule", "update", "--init", "--recursive"))
                     .join();
 
-            List<String> arcPatchParams = new ArrayList<String>(Arrays.asList("--diff", diffID));
+            List<String> arcPatchParams = new ArrayList<String>(Arrays.asList("patch", "--diff", diffID));
             if (!createCommit) {
                 arcPatchParams.add("--nocommit");
             }
@@ -122,7 +122,7 @@ public class ApplyPatchTask extends Task {
 
             ArcanistClient arc = new ArcanistClient(
                     arcPath,
-                    "patch",
+                    "git",
                     conduitToken,
                     arcPatchParams.toArray(new String[arcPatchParams.size()]));
 
